@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="x-ua-compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>alert</title>
+</head>
+<body>
+
+<input type="button" id="alertButton" value="alert" onclick="alertButton()">
+<input type="button" id="confirmButton" value="confirm" onclick="confirmButton()">
+<input type="button" id="promptButton" value="prompt" onclick="promptButton()">
+<script>
+
+    function alertButton() {
+        alert('我是普通的alert提示框');
+    };
+
+    function confirmButton() {
+        var msg = confirm('点击[确定]或者[取消]按钮');
+        if (msg) {
+            alert('你点击的是[确定按钮]');
+        } else {
+            alert('你点击的是[取消按钮]');
+        }
+    };
+
+    function promptButton() {
+        var msg = prompt('输入一个值:', '我是默认值');
+        if (msg) {
+            alert('输入的值为:\n' + msg);
+        } else {
+            alert('输入值为空');
+        }
+    };
+</script>
+</body>
+</html>

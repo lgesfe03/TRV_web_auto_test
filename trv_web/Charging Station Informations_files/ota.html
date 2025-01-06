@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<!-- saved from url=(0030)http://192.168.3.110/ota.shtml -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+    <title>KSDK HTTP Server Example</title>
+    <style type="text/css">
+
+    </style>
+
+</head>
+
+<body>
+    <p><span style="background-color: rgb(182, 222, 242);">During the update process, please ensure that the power supply and network connection remain stable.</span></p>
+    <h4 id="Message_Show" style="margin-bottom:14px;">
+        Select file with updated firmware and click Upload.
+    </h4>
+
+    <div style="text-align: left;">
+
+        <form id="my-form" name="ex_form" action="http://192.168.3.110/upload.cgi" method="POST" enctype="multipart/form-data">
+            <input id="but_update" type="submit" value="1-Upload" onclick="UploadStart()">
+            <input id="update_file" type="file" accept=".bin" name="update_file">
+        </form>
+
+        <div style="display: flex; align-items: center;">
+            <progress id="upload-progress" value="0" max="100"></progress> <!--progress bar-->
+            <span id="progress-text" style="margin-left: 10px;">0%</span>  <!--Progress value-->
+        </div>
+
+        <form name="ex_form" action="http://192.168.3.110/reboot.cgi" method="get" style=" margin-bottom: 5px;">
+            <input id="reboot_but" type="submit" value="2-Reboot" onclick="checkRST()" disabled="true">
+        </form>
+        <!--
+        <form name="ex_form" action="accept.cgi" method="get" style="margin-top:10px">
+            <input type="submit" value="3-Accept update" onclick= "checkRST()"  >
+        </form>
+        -->
+    </div>
+
+    <script>
+
+        function FileCheck()
+        {
+            var fileinput, getfile;
+            fileinput = document.getElementById('But_FileChoose');
+            document.getElementById('But_Submit').disabled = true;
+            getfile = fileinput.files[0];
+            if (getfile == null)
+            {
+                document.getElementById('Message_Show').textContent = ("No any file selection.");
+                document.getElementById('Message_Show').style.color = "red";
+            }
+            else
+            {
+                if (checkFileExtension(getfile.name)) 
+                {
+                    document.getElementById('Message_Show').textContent = 'File extension is correct.';
+                    document.getElementById('Message_Show').style.color = "green";
+                    document.getElementById('But_Submit').disabled = false;
+                    document.getElementById('my-form').submit();
+                } 
+                else 
+                {
+                    document.getElementById('Message_Show').textContent ='File extension is incorrect. (Shall be bin file)';
+                    document.getElementById('Message_Show').style.color = "red";
+                }
+            }
+        }
+
+    function checkFileExtension(filename)
+    {
+     return filename.endsWith('.bin');
+    }
+
+    function UploadStart(){
+        window.parent.postMessage('Upload_but', '*');
+    }
+
+    function checkRST(){
+        if (confirm('The charging station will be reset.')) 
+        {
+            window.parent.postMessage('close_table', '*');
+        }
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+    // Get the DOM elements of form, file input, progress bar and progress text
+    const form = document.querySelector("#my-form");
+    const fileInput = document.querySelector("#update_file");
+    const progressBar = document.querySelector("#upload-progress");
+    const progressText = document.querySelector("#progress-text");
+    const updateButton = document.getElementById("but_update");
+    const rebootButton = document.getElementById("reboot_but");
+
+    //Bind the submit event handler to the form
+    form.addEventListener("submit", function(event) {
+        event.preventDefault();
+        updateButton.disabled = true;
+
+        //Create new XMLHttpRequest
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", form.action, true);
+    
+        //Listen to progress bar events
+        xhr.upload.addEventListener("progress", function(event) {
+            if (event.lengthComputable) {
+                const percentage = (event.loaded / event.total) * 100;
+                progressBar.value = percentage;
+                progressText.textContent = `${percentage.toFixed(2)}%`; // 更新進度值
+            }
+        });
+
+        //Listen for request status change events
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 200) {
+                    alert("File upload complete");
+                    fileInput.disabled = true;
+                    rebootButton.disabled = false;
+                } else {
+                    alert("File upload incomplete");
+                }
+            }
+        };
+        //Use FormData to send files
+        const formData = new FormData(form);
+        xhr.send(formData);
+    });
+
+    //Bind the change event handler to the file input
+    fileInput.addEventListener("change", function() {
+        //When a file is selected, reset the progress bar and progress text
+        progressBar.value = 0;
+        progressText.textContent = `0%`;
+        rebootButton.disabled = true;
+    });
+
+    });    			
+	</script>
+
+
+</body></html>

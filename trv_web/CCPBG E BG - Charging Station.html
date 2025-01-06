@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<!-- saved from url=(0021)http://192.168.3.110/ -->
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1255">
+        
+        <title>CCPBG E BG - Charging Station</title>
+        <link href="./CCPBG E BG - Charging Station_files/styles.css" rel="stylesheet" type="text/css" media="screen">
+		    <script src="./CCPBG E BG - Charging Station_files/anime.min.js.download"></script>
+    </head>
+    <body>
+
+		<div class="page">
+			<div class="container">
+			  <div class="left">
+        <img src="./CCPBG E BG - Charging Station_files/Foxconn_Logo.png" alt="Foxconn Logo" style="width: 200px; height: 48px; position: absolute; top: 10px; left: 10px;">
+				<div class="login">Login</div>
+				<div class="eula">FOXCONN chargers come with a wide range of features to provide an unparalleled user experience. Let us charge your world.</div>
+			  </div>
+			  <div class="right">
+				<svg viewBox="0 0 320 300">
+				  <defs>
+					<lineargradient inkscape:collect="always" id="linearGradient" x1="13" y1="193.49992" x2="307" y2="193.49992" gradientUnits="userSpaceOnUse">
+					  <stop style="stop-color:#ff00ff;" offset="0" id="stop876"></stop>
+					  <stop style="stop-color:#ff0000;" offset="1" id="stop878"></stop>
+					</lineargradient>
+				  </defs>
+				  <path d="m 40,120.00016 239.99984,-3.2e-4 c 0,0 24.99263,0.79932 25.00016,35.00016 0.008,34.20084 -25.00016,35 -25.00016,35 h -239.99984 c 0,-0.0205 -25,4.01348 -25,38.5 0,34.48652 25,38.5 25,38.5 h 215 c 0,0 20,-0.99604 20,-25 0,-24.00396 -20,-25 -20,-25 h -190 c 0,0 -20,1.71033 -20,25 0,24.00396 20,25 20,25 h 168.57143" style="stroke-dashoffset: -336px; stroke-dasharray: 240, 1386;"></path>
+				</svg>
+
+        <div class="form">
+          <label for="acc">Account</label>
+          <input id="acc" autocomplete="off">
+          <label for="pwd">Password</label>
+          <form>
+            <input type="password" id="pwd" autocomplete="off" onkeydown="preventSubmit(event)">            
+          </form>
+          <input type="submit" id="submit" value="Submit" onclick="CheckPermission(&#39;LOGIN_SUBMIT&#39;)">
+          <h5 onmousedown="CheckPermission(&#39;FORGET&#39;)" style="color: #64ab63; float: right;">Forget</h5>
+        </div>
+
+			  </div>
+			</div>
+		  </div>
+	
+    
+
+
+	<script>
+  var current = null;
+  document.querySelector('#acc').addEventListener('focus', function(e) {
+    if (current) current.pause();
+      current = anime({
+      targets: 'path',
+      strokeDashoffset: {
+      value: 0,
+      duration: 700,
+      easing: 'easeOutQuart'
+      },
+      strokeDasharray: {
+      value: '240 1386',
+      duration: 700,
+      easing: 'easeOutQuart'
+      }
+      });
+    });
+
+  document.querySelector('#pwd').addEventListener('focus', function(e) {
+  if (current) current.pause();
+      current = anime({
+      targets: 'path',
+      strokeDashoffset: {
+      value: -336,
+      duration: 700,
+      easing: 'easeOutQuart'
+    },
+      strokeDasharray: {
+      value: '240 1386',
+      duration: 700,
+      easing: 'easeOutQuart'
+    }
+    });
+  });
+
+  document.querySelector('#submit').addEventListener('focus', function(e) {
+  if (current) current.pause();
+    current = anime({
+    targets: 'path',
+    strokeDashoffset: {
+      value: -730,
+      duration: 700,
+      easing: 'easeOutQuart'
+    },
+      strokeDasharray: {
+      value: '530 1386',
+      duration: 700,
+      easing: 'easeOutQuart'
+    }
+    });
+  });
+
+
+  function caesarEncrypt(plaintext, shift) 
+  {
+    let result = "";
+    for (let i = 0; i < plaintext.length; i++) {
+        let charCode = plaintext.charCodeAt(i);
+        if ((charCode >= 65 && charCode <= 90) || (charCode >= 97 && charCode <= 122)) { // letters
+            let base = charCode >= 65 && charCode <= 90 ? 65 : 97;
+            result += String.fromCharCode(((charCode - base + shift) % 26 + 26) % 26 + base);
+        } else if (charCode >= 48 && charCode <= 57) { // numbers
+            result += String.fromCharCode(((charCode - 48 + shift) % 10 + 10) % 10 + 48);
+        } else { // other characters
+            result += plaintext[i];
+        }
+    }
+    return result;
+  }
+
+  function preventSubmit(event) 
+  {
+    if (event.key === "Enter") {
+      event.preventDefault();
+    }
+  }
+
+  function CheckPermission(COMMAND)
+  {
+    if (COMMAND == "FORGET") 
+    {
+      var account  = "0000";
+      var password = prompt("Please enter the key(recorded in the user manual). ");
+    }
+    else
+    {
+      var account  = document.getElementById("acc").value;
+      var password = document.getElementById("pwd").value;
+    }
+    account  = caesarEncrypt(account, 3);
+    password = caesarEncrypt(password, 3);
+
+
+    fetch("Login_Info_req.cgi", 
+    { 
+      method: "POST",
+      headers: {
+                "Content-Type": "application/x-www-form-urlencoded" // 設置標頭
+            },
+            body: "COMMAND=" + encodeURIComponent(COMMAND) + "&account=" + encodeURIComponent(account) + "&password=" + encodeURIComponent(password)
+    })
+    .then(function(response) 
+    {
+      if (!response.ok)
+      {
+      window.location.href = "error_page.html";
+      throw new Error('Network response was not ok.');
+      }
+      return response.text();
+    })
+    .then(function(data) 
+    {
+      // create URLSearchParams object，input string
+      const params = new URLSearchParams(data);
+      //console.log("CheckPermission=" + data)
+
+      PRY_Level   = params.get('PRY_Level');
+      charger_acc = params.get('user_acc');
+      charger_pwd = params.get('user_pwd');
+
+
+        if(PRY_Level != "E")
+        {
+            //console.log(Level);
+            var newWindow = window.open("table.shtml");
+
+            var messageData = {
+                params1: 'AC-1_' + PRY_Level,
+                params2: charger_acc,
+                params3: charger_pwd
+            };
+
+            window.addEventListener("message", function(event) 
+            {
+                if (event.source == newWindow && event.data == "table shtml loaded") 
+                {
+                    newWindow.postMessage(messageData, "*");
+                }
+            }
+            )
+            
+            //setTimeout(function() {
+            //window.open("about:blank", "_self");
+            //window.close();
+            //}, 2000);
+      }
+      else
+      {
+        alert("Invalid account or password!");
+      }  
+
+    })
+    .catch(function(error) {
+    console.error('Fetch error:', error);
+    window.location.href = "error_page.html";
+    });
+  }
+
+
+
+	</script>
+
+
+</body></html>

@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<!-- saved from url=(0032)http://192.168.3.110/table.shtml -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+  <title>Charging Station Informations</title>
+  <link href="./Charging Station Informations_files/table.css" rel="stylesheet" type="text/css" media="screen">
+</head>
+
+<body>
+
+
+  <ul>
+   <li><a href="javascript:void(0);" onclick="showPage(&#39;EVSE_Info&#39;)">Charger Informations</a></li>
+   <li><a href="javascript:void(0);" onclick="showPage(&#39;EVSE_Set&#39;)">Charger Settings</a></li>
+   <li><a href="javascript:void(0);" onclick="showPage(&#39;OCPP&#39;)">OCPP Settings</a></li>
+   <li><a href="javascript:void(0);" onclick="showPage(&#39;SYS_TOOLS&#39;)">System Tools</a></li>
+  </ul>
+
+
+
+  <div>
+    <div id="EVSE_Info" class="page" style="display: block;">
+      <table>
+        <tbody><tr>
+          <th>Login Info</th>
+          <td>
+            <code>ACC.</code>
+            <input type="text" id="Login_Account" value="" disabled="true" maxlength="30">
+            <i>&nbsp;&nbsp;</i><br>
+            <form>            
+            <code>PWD.</code>
+              <input type="password" id="Login_Password" onkeydown="preventSubmit(event)" autocomplete="off" style="display: inline-block;" value="" maxlength="30">
+              <input type="checkbox" onclick="ShowPwd()">
+              <i>&nbsp;&nbsp;</i>
+              <input type="button" id="but_Login_Account" class="but_styled" value="Submit" onclick="CGI_Send(&#39;Login_InfoChange&#39;)">
+            </form>
+          </td>
+        </tr>
+
+        <tr>
+          <th>Model Name</th>
+          <td>
+            <input type="text" id="Model_Name" value="" disabled="true">
+            <!-- <input type="button" id="but_Model_Name" class="but_styled" value="Submit" onclick= "CGI_Send('Model_Name')"> -->
+          </td>
+        </tr>
+        <tr>
+          <th>Serial Number</th>
+          <td>
+            <input type="text" id="Serial_Numb" value="" disabled="true">
+          </td> 
+        </tr>
+
+        <tr>
+          <th>OCPP Version</th>
+          <td>
+            <input type="text" value="OCPP 1.6J" disabled="true">
+          </td>
+        </tr>
+
+
+        <tr>
+          <th>Version: MCU FW</th>
+          <td><input type="text" id="Ver_MCU_FW" value="" disabled=""></td>
+        </tr>
+
+      </tbody></table>
+
+    </div><!-- END EVSE_Info page -->
+
+    <div id="EVSE_Set" class="page" style="display: none;">
+      <table>
+
+        <tbody><tr>  
+          <th>Charging Authentication</th>
+          <td>
+            <select name="Charg_Auth" onchange="CGI_Send(&#39;Charg_Auth&#39;, this.value); update_InputDiabled();">
+              <option value="0">0-Plug and play</option>
+              <option value="1">1-local list mode</option>
+              <option value="2">2-OCPP mode</option>
+            </select>
+          </td>
+        </tr>
+
+        <tr>
+          <th>Ethernet MAC Address</th>
+          <td>
+            <input type="text" id="mac_addr_eth" value="" maxlength="17" disabled="true">
+          </td>
+        </tr>
+
+        <tr><th>Ethernet Network Mode</th>
+        <td>
+          <select name="Eth_DHCP" onchange="CGI_Send(&#39;Eth_DHCP&#39;, this.value);  update_InputDiabled();">
+            <option value="0">0 Static IP</option>
+            <option value="1">1 DHCP</option>
+          </select>
+        </td>
+
+        </tr><tr>
+          <th>Ethernet Settings</th>
+          <td>
+            <code>IP Address:</code>
+            <input type="text" id="IP_addr_eth" class="form-input" placeholder="xxx.xxx.xxx.xxx">
+            <input type="submit" id="but_IP_addr_eth" class="but_styled" value="Submit" onclick="ValidateIPaddress(document.getElementById(&#39;IP_addr_eth&#39;))"><br><br>
+
+            <code>Subnetmask:</code>
+            <input type="text" id="Submask_eth" class="form-input" placeholder="xxx.xxx.xxx.xxx">
+            <input type="button" id="but_Submask_eth" class="but_styled" value="Submit" onclick="ValidateIPaddress(document.getElementById(&#39;Submask_eth&#39;))">
+          </td>
+        </tr>
+
+        <tr>
+          <th>WIFI MAC Address</th>
+          <td>
+            <input type="text" id="mac_addr_wifi" value="" maxlength="17" disabled="true">
+          </td>
+        </tr>
+     
+        <tr>
+        <th>Wifi AP Mode</th>
+        <td>
+          <code>SSID:</code>
+          <input type="text" id="Wifi_AP_SSID" value="" maxlength="32" disabled="true"><br><br>
+
+          <code>PWD :</code>
+          <input type="text" id="Wifi_AP_Pwd" value="" maxlength="16" disabled="true">
+          <!--<input type="button" id="but_Wifi_AP_SET" class="but_styled" value="Submit" onclick= "CGI_Send('Wifi_AP_SET')">-->
+        </td>
+        </tr>
+
+
+        <tr>
+        <th>Wifi SSID/PWD</th>
+        <td>
+          <p><span style="background-color: rgb(182, 222, 242);">Please try to avoid using symbols as much as possible.</span></p>
+          <code>SSID:</code>
+
+          <input type="text" id="Wifi_CLIENT_SSID" value="" maxlength="32"><br><br>
+          <code>PWD :</code>
+
+          <input type="text" id="Wifi_CLIENT_Pwd" value="" maxlength="16">
+          <input type="button" id="but_Wifi_CLIENT_SET" class="but_styled" value="Submit" onclick="CGI_Send(&#39;Wifi_CLIENT_SET&#39;)">
+        </td>
+        </tr>
+
+        <tr>
+          <th>Wifi Network Mode</th>
+          <td>
+            <select name="Wifi_DHCP" onchange="CGI_Send(&#39;Wifi_DHCP&#39;, this.value);  update_InputDiabled();">
+              <option value="0">0 Static IP</option>
+              <option value="1">1 DHCP</option>
+            </select>
+          </td>
+        </tr>
+
+        <tr>
+          <th>WIFI Settings</th>
+          <td>
+            <code>IP Address:</code>
+            <input type="text" id="IP_addr_wifi" class="form-input" placeholder="xxx.xxx.xxx.xxx">
+            <input type="button" id="but_IP_addr_wifi" class="but_styled" value="Submit" onclick="ValidateIPaddress(document.getElementById(&#39;IP_addr_wifi&#39;))"><br><br>
+
+            <code>Subnetmask:</code>
+            <input type="text" id="Submask_wifi" class="form-input" placeholder="xxx.xxx.xxx.xxx">
+            <input type="button" id="but_Submask_wifi" class="but_styled" value="Submit" onclick="ValidateIPaddress(document.getElementById(&#39;Submask_wifi&#39;))">
+
+          </td>
+        </tr>
+
+        <tr>
+          <th>Wifi AP-CLIENT mode</th>
+          <td>
+            <select name="Wifi_Mode" onchange="CGI_Send(&#39;Wifi_Mode&#39;, this.value)">
+              <option value="0">0 AP</option>
+              <option value="1">1 CLIENT</option>
+            </select>
+          </td>
+        </tr>
+
+        <tr id="Local_list" style="display: none;">
+          <th>Local list</th>
+          <td>
+            <p><span style="background-color: rgb(182, 222, 242);">Accepted characters are 0-9 and A-F(uppercase characters).</span></p>
+            <code>RFID1:</code>
+            <input type="text" id="whitelist_0" maxlength="20" oninput="checkRFID(this)" value="">
+            <input type="button" id="but_whitelist_0" class="but_styled" value="Submit" onclick="CGI_Send(&#39;whitelist_0&#39;)" ;="">
+            <i>&nbsp;&nbsp;</i><br>
+            <code>RFID2:</code>
+            <input type="text" id="whitelist_1" maxlength="20" oninput="checkRFID(this)" value="">
+            <input type="button" id="but_whitelist_1" class="but_styled" value="Submit" onclick="CGI_Send(&#39;whitelist_1&#39;)">
+            <i>&nbsp;&nbsp;</i><br>
+            <code>RFID3:</code>            
+            <input type="text" id="whitelist_2" maxlength="20" oninput="checkRFID(this)" value="">
+            <input type="button" id="but_whitelist_2" class="but_styled" value="Submit" onclick="CGI_Send(&#39;whitelist_2&#39;)">
+            <i>&nbsp;&nbsp;</i><br>
+            <code>RFID4:</code>
+            <input type="text" id="whitelist_3" maxlength="20" oninput="checkRFID(this)" value="">
+            <input type="button" id="but_whitelist_3" class="but_styled" value="Submit" onclick="CGI_Send(&#39;whitelist_3&#39;)">
+            <i>&nbsp;&nbsp;</i><br>
+            <code>RFID5:</code>            
+            <input type="text" id="whitelist_4" maxlength="20" oninput="checkRFID(this)" value="">
+            <input type="button" id="but_whitelist_4" class="but_styled" value="Submit" onclick="CGI_Send(&#39;whitelist_4&#39;)">
+            <i>&nbsp;&nbsp;</i><br>
+            <code>RFID6:</code>
+            <input type="text" id="whitelist_5" maxlength="20" oninput="checkRFID(this)" value="">
+            <input type="button" id="but_whitelist_5" class="but_styled" value="Submit" onclick="CGI_Send(&#39;whitelist_5&#39;)">
+            <i>&nbsp;&nbsp;</i><br>
+            <code>RFID7:</code>
+            <input type="text" id="whitelist_6" maxlength="20" oninput="checkRFID(this)" value="">
+            <input type="button" id="but_whitelist_6" class="but_styled" value="Submit" onclick="CGI_Send(&#39;whitelist_6&#39;)">
+            <i>&nbsp;&nbsp;</i><br>
+            <code>RFID8:</code>
+            <input type="text" id="whitelist_7" maxlength="20" oninput="checkRFID(this)" value="">
+            <input type="button" id="but_whitelist_7" class="but_styled" value="Submit" onclick="CGI_Send(&#39;whitelist_7&#39;)">
+            <i>&nbsp;&nbsp;</i><br>
+            <code>RFID9:</code>
+            <input type="text" id="whitelist_8" maxlength="20" oninput="checkRFID(this)" value="">
+            <input type="button" id="but_whitelist_8" class="but_styled" value="Submit" onclick="CGI_Send(&#39;whitelist_8&#39;)">
+          </td>
+        </tr>
+
+
+        <tr>
+        <th>Wifi security</th>
+        <td>                           
+            <code>WPA2</code>
+        </td>
+        </tr>
+
+        <tr>
+          <th>Max output current</th>
+          <td>
+            <input type="number" id="Rating_Current" value="" step="1" min="0" max="48" oninput="checkRatingCurrent(this)">
+            <input type="button" id="but_Rating_Current" class="but_styled" value="Submit" onclick="CGI_Send(&#39;Rating_Current&#39;, (document.getElementById(&#39;Rating_Current&#39;).value)*1000)">
+          </td>
+        </tr>
+
+
+      </tbody></table>
+    </div><!-- END EVSE_Set page  -->
+
+    <div id="OCPP" class="page" style="display: none;">
+      <table>
+
+        <tbody><tr>
+          <th>BOX ID</th>
+          <td>
+            <p><span style="background-color: rgb(182, 222, 242);">Only characters allowed as: a-z, A-Z, 0-9, "-" and "_". </span></p>
+            <input type="text" id="BOX_ID" value="" maxlength="10" oninput="checkBOXID_LEN(this)">
+            <input type="button" id="but_BOXID" class="but_styled" value="Submit" onclick="CGI_Send(&#39;BOXID&#39;, document.getElementById(&#39;BOX_ID&#39;).value)">
+          </td>
+        </tr>
+
+        <tr>
+          <th>OCPP URL</th>
+          <td>
+            <p><span style="background-color: rgb(182, 222, 242);">Format : "ws://" + "IP" + : + "PORT" + "PATH" </span></p>
+            <p><span style="background-color: rgb(182, 222, 242);">Example: ws://192.168.3.173:8443/ocpp/websocket/CentralSystemService/</span></p>
+            <textarea type="text" id="OCPP_URL" value="" maxlength="128" oninput="checkLength(this)" disabled=""></textarea>
+            <input type="button" id="but_OCPP_URL" class="but_styled" value="Submit" onclick="CGI_Send(&#39;OCPP_URL&#39;)">
+          </td> 
+        </tr>
+
+      </tbody></table>
+    </div><!-- END OCPP page  -->
+
+    <div id="SYS_TOOLS" class="page" style="display: none;">
+      <table>
+
+        <tbody><tr>
+          <th>System DateTime</th>
+          <td>
+            <input type="text" id="System_DateTime" value="" disabled="true">
+            <input type="button" id="but_SYS_Time" class="but_styled" value="SYNC" onclick="CGI_Send(&#39;SYS_Time&#39;)">
+          </td>
+        </tr>
+
+        <tr id="FW_update_row">
+          <th>Firmware Update</th>
+            <td>
+                <iframe id="content_frame" src="./Charging Station Informations_files/ota.html" width="450px" height="180" style="border:none">&nbsp;</iframe>
+            </td>
+        </tr>
+
+        <tr id="Access_Restr_row">
+          <th>Access Restrictions</th>
+          <td>
+            <select name="Access_Mode" onchange="CGI_Send(&#39;Access_Mode&#39;, this.value);">
+              <option value="0">0 Disable</option>
+              <option value="1">1 Enable</option>
+            </select>
+          </td>
+        </tr>
+
+        <tr id="mac_list_row">
+          <th>MAC Address - Whitelist</th>
+          <td>
+            <p><span style="background-color: rgb(182, 222, 242);">Accepted characters are 0-9 and A-F(uppercase characters).</span></p>
+            <code>MAC ADDR-1:</code>
+            <input type="text" id="mac_whitelist_0" class="form-input" placeholder="xx-xx-xx-xx-xx-xx">
+            <input type="button" id="but_mac_whitelist_0" class="but_styled" value="Submit" onclick="CGI_Send(&#39;mac_whitelist_0&#39;)" ;="">
+            <i>&nbsp;&nbsp;</i><br>
+            <code>MAC ADDR-2:</code>
+            <input type="text" id="mac_whitelist_1" class="form-input" placeholder="xx-xx-xx-xx-xx-xx">
+            <input type="button" id="but_mac_whitelist_1" class="but_styled" value="Submit" onclick="CGI_Send(&#39;mac_whitelist_1&#39;)" ;="">
+            <i>&nbsp;&nbsp;</i><br>
+            <code>MAC ADDR-3:</code>            
+            <input type="text" id="mac_whitelist_2" class="form-input" placeholder="xx-xx-xx-xx-xx-xx">
+            <input type="button" id="but_mac_whitelist_2" class="but_styled" value="Submit" onclick="CGI_Send(&#39;mac_whitelist_2&#39;)" ;="">
+            <i>&nbsp;&nbsp;</i><br>
+            <code>MAC ADDR-4:</code>
+            <input type="text" id="mac_whitelist_3" class="form-input" placeholder="xx-xx-xx-xx-xx-xx">
+            <input type="button" id="but_mac_whitelist_3" class="but_styled" value="Submit" onclick="CGI_Send(&#39;mac_whitelist_3&#39;)" ;="">
+            <i>&nbsp;&nbsp;</i><br>
+            <code>MAC ADDR-5:</code>            
+            <input type="text" id="mac_whitelist_4" class="form-input" placeholder="xx-xx-xx-xx-xx-xx">
+            <input type="button" id="but_mac_whitelist_4" class="but_styled" value="Submit" onclick="CGI_Send(&#39;mac_whitelist_4&#39;)" ;="">
+            <i>&nbsp;&nbsp;</i><br>
+            <code>MAC ADDR-6:</code>
+            <input type="text" id="mac_whitelist_5" class="form-input" placeholder="xx-xx-xx-xx-xx-xx">
+            <input type="button" id="but_mac_whitelist_5" class="but_styled" value="Submit" onclick="CGI_Send(&#39;mac_whitelist_5&#39;)" ;="">
+            <i>&nbsp;&nbsp;</i><br>
+            <code>MAC ADDR-7:</code>
+            <input type="text" id="mac_whitelist_6" class="form-input" placeholder="xx-xx-xx-xx-xx-xx">
+            <input type="button" id="but_mac_whitelist_6" class="but_styled" value="Submit" onclick="CGI_Send(&#39;mac_whitelist_6&#39;)" ;="">
+            <i>&nbsp;&nbsp;</i><br>
+            <code>MAC ADDR-8:</code>
+            <input type="text" id="mac_whitelist_7" class="form-input" placeholder="xx-xx-xx-xx-xx-xx">
+            <input type="button" id="but_mac_whitelist_7" class="but_styled" value="Submit" onclick="CGI_Send(&#39;mac_whitelist_7&#39;)" ;="">
+            <i>&nbsp;&nbsp;</i><br>
+            <code>MAC ADDR-9:</code>
+            <input type="text" id="mac_whitelist_8" class="form-input" placeholder="xx-xx-xx-xx-xx-xx">
+            <input type="button" id="but_mac_whitelist_8" class="but_styled" value="Submit" onclick="CGI_Send(&#39;mac_whitelist_8&#39;)" ;="">
+          </td>
+        </tr>
+
+        <tr>
+          <th>Event/Alarm Log</th>
+            <td>
+              <iframe id="LOG_frame" src="./Charging Station Informations_files/eventLog.html" width="450px" height="90" style="border:none">&nbsp;</iframe>
+            </td>
+        </tr>
+
+        <tr>
+          <th>Reset EVSE</th>
+          <td>
+            <i>Perform a software reset operation. &#8594;</i>
+            <input type="button" id="Reset_but" class="but_styled" value="Submit" onclick="showConfirmation(&#39;sw_reset&#39;)">
+          </td>
+        </tr>
+
+        <tr>
+          <th>Reset to Default</th>
+          <td>
+            <i>Process of restoring a device to its default settings &#8594;</i>
+            <input type="button" id="Reset2Default_but" class="but_styled" value="Submit" onclick="showConfirmation(&#39;reset2default&#39;)">
+          </td>
+        </tr>
+
+        <tr id="EVSE_format_row">
+          <th>EVSE format</th>
+          <td>
+            <i>Process of completely restoring a device to its original state as it was when it left the factory &#8594;</i>
+            <input type="button" id="EVSE_format_but" class="but_styled" value="Submit" onclick="showConfirmation(&#39;reset2factory&#39;)">
+          </td>
+        </tr>
+
+      </tbody></table>
+    </div><!-- END SYS_TOOLS page  -->
+  </div>
+
+  <script>
+  window.addEventListener('message', function(event) {
+
+    var iframe = document.getElementById('content_frame');
+    if (event.source === iframe.contentWindow) {
+        // if message from iframe
+        if (event.data === 'close_table') {
+            // Close web page table.shtml
+            showConfirmation('close_table');
+        }
+
+        if (event.data === 'Upload_but') {
+
+            document.getElementById('Reset_but').disabled = true;
+            document.getElementById('Reset2Default_but').disabled = true;
+            document.getElementById('EVSE_format_but').disabled = true;
+        }
+    }
+  });
+
+
+  window.addEventListener("load", function() 
+  {window.opener.postMessage("table shtml loaded", "*");}
+  );// End of window.addEventListener
+
+  window.addEventListener("DOMContentLoaded", function() 
+  {
+	  window.addEventListener("message", async function(event) 
+	  { 
+		  if (event.source == window.opener) 
+		  {
+		    try {
+		    const evseParaResponse = await fetch("evse_para_req.cgi", 
+		    {method: "GET",});
+	
+		    // 處理evse_para_req.cgi的回應
+		    const data = await evseParaResponse.text();
+		    // create URLSearchParams object，input string
+		    const params = new URL_Search_Params(data);
+        //console.log(event.data.params1)
+		    if(event.data.params1 == "AC-1_H")
+		    {
+			  //document.getElementById("content_frame").style.display= "block";
+			  //document.getElementById("LOG_frame").style.display= "block";
+		    }
+        else if(event.data.params1 == "AC-1_M")
+        {
+
+        }
+		    else if(event.data.params1 == "AC-1_L")
+		    {
+			    document.getElementById("FW_update_row").style.display   = "none";
+			    document.getElementById("EVSE_format_row").style.display= "none";
+          document.getElementById("Access_Restr_row").style.display= "none";
+          document.getElementById("mac_list_row").style.display= "none";
+		    }
+        plaintext_acc = caesarDecrypt( event.data.params2, 3);
+        updateValueById('Login_Account',  plaintext_acc);
+
+        plaintext_pwd = caesarDecrypt( event.data.params3, 3);
+		    updateValueById('Login_Password', plaintext_pwd);
+
+        showPage('EVSE_Info'); // 設定預設顯示的分頁為 'info'
+		    } 
+		    catch (error) 
+		    {console.log(`Error: ${error}`);}
+		  }
+	  }); // End of window.addEventListener
+  }); // End of DOMContentLoaded
+
+  function URL_Search_Params(data)
+  {
+    console.log(data);
+    // create URLSearchParams object，input string
+    const params = new URLSearchParams(data);
+
+    //define updateValue function
+    const updateValue = (paramName, elementId) => 
+    {
+      const value = params.get(paramName);
+
+      if (paramName === "Wifi_AP_Pwd" || paramName === "Wifi_CLIENT_Pwd" || paramName.startsWith("rfid"))
+      {
+        const decryptedValue = caesarDecrypt(value, 3);
+        updateValueById(elementId, decryptedValue);
+      }
+      else
+      {
+        updateValueById(elementId, value);
+      }
+
+    };
+   
+    // Page Charge Info
+    const pageChargeInfoParams =
+    ['Model_Name', 'Serial_Numb', 'System_DateTime', 'Ver_MCU_FW'];
+    pageChargeInfoParams.forEach(param => updateValue(param, param));
+
+    // Page Charge Setting
+    const pageChargeSettingParams =
+    ['mac_addr_eth','IP_addr_eth', 'Submask_eth', 
+     'mac_addr_wifi','IP_addr_wifi', 'Submask_wifi',
+    'Wifi_AP_SSID', 'Wifi_AP_Pwd', 'Wifi_CLIENT_SSID', 'Wifi_CLIENT_Pwd'];
+    pageChargeSettingParams.forEach(param => updateValue(param, param));
+
+    var Wifi_Mode     = params.get('Wifi_Mode');          updateSelector_ValueByName('Wifi_Mode', Wifi_Mode);
+    var Wifi_DHCP     = params.get('Wifi_DHCP');          updateSelector_ValueByName('Wifi_DHCP', Wifi_DHCP);
+    var Eth_DHCP      = params.get('Eth_DHCP');           updateSelector_ValueByName('Eth_DHCP', Eth_DHCP);
+    const Rating_Current= params.get('Rating_Current');   updateValueById('Rating_Current', (Rating_Current/1000));
+    var Authentication= params.get('Charg_Auth');         updateSelector_ValueByName('Charg_Auth', Authentication);
+
+    const whitelistParams = ['rfid0', 'rfid1', 'rfid2', 'rfid3', 'rfid4', 'rfid5', 'rfid6', 'rfid7', 'rfid8'];
+    whitelistParams.forEach((param, index) => updateValue(param, `whitelist_${index}`));
+
+
+    const mac_whitelist = ['mac_addr0', 'mac_addr1', 'mac_addr2', 'mac_addr3', 'mac_addr4', 'mac_addr5', 'mac_addr6', 'mac_addr7', 'mac_addr8'];
+    mac_whitelist.forEach((param, index) => updateValue(param, `mac_whitelist_${index}`));
+
+    // Page OCPP Setting  
+    const OCPP_BOXID  = params.get('OCPP_BOXID'); updateValueById('BOX_ID', OCPP_BOXID);
+    const OCPP_URL    = params.get('OCPP_URL');   updateValueById('OCPP_URL', OCPP_URL);
+    // System Tools
+    var Access_Rstr= params.get('Access_Rstr');           updateSelector_ValueByName('Access_Mode', Access_Rstr);
+
+    update_InputDiabled();
+  }
+
+  function updateValueById(id, value) 
+  {
+    const element = document.getElementById(id);
+    if (element) 
+    {element.value = value;} 
+    else
+    {console.log(`Not find element:${id}`);}  
+  }
+
+  function updateSelector_ValueByName(name, value) 
+  {
+    const element = document.querySelector('[name="' + name + '"]');
+    if(element) 
+    {element.value = value;} 
+    else 
+    {console.log(`Not find element:${name}`);}  
+  }
+
+  function CGI_Send(value, In_para1)
+  {
+    form = document.createElement("form");
+    form.action = value + '.cgi';
+    form.method = "post";
+    var params = {}; 
+
+    switch(value)
+    {
+      // Page Charge Info-------------------------------------------------
+      case 'Login_InfoChange':
+
+          EncryptStr = caesarEncrypt(document.getElementById("Login_Password").value, 3);
+          if (EncryptStr.trim() === '') 
+          {
+            alert('Password shall not empty.');
+            return false;
+          }
+          else
+          {
+            params = {params1: document.getElementById("Login_Account").value,
+            params2: EncryptStr};
+          }
+
+        break;
+      case  'SYS_Time':
+          var now   = new Date();
+		      var year  = (now.getFullYear()) & 0xFFFF;
+		      var month = (now.getMonth() + 1) & 0xFF; // 月份從0開始，需要加1
+		      var day   = now.getDate() & 0xFF;
+		      var hour  = now.getHours() & 0xFF;
+		      var minute= now.getMinutes() & 0xFF;
+		      var second= now.getSeconds() & 0xFF;
+          params = {params1: year,
+                    params2: month,
+                    params3: day,
+                    params4: hour,
+                    params5: minute,
+                    params6: second};
+        break;
+      // Page Charge Setting
+      case 'Charg_Auth':
+      case 'Access_Mode':
+      case 'Eth_DHCP':
+      case 'Wifi_Mode':
+      case 'Wifi_DHCP':
+      case 'Rating_Current':
+      case 'IP_addr_eth':
+      case 'Submask_eth':
+      case 'IP_addr_wifi':
+      case 'Submask_wifi':        
+          params = {params1: value,
+                    params2: In_para1};
+        break;
+      case 'Wifi_AP_SET':
+          params = {params1: document.getElementById("Wifi_AP_SSID").value,
+                    params2: document.getElementById("Wifi_AP_Pwd").value};
+        break;
+      case 'Wifi_CLIENT_SET':
+          var client_password = document.getElementById("Wifi_CLIENT_Pwd").value;
+          if(client_password === null || client_password === "")
+          {
+            alert("Password shall not be null.");
+            return;   
+          }
+          else
+          {
+            params = {params1: document.getElementById("Wifi_CLIENT_SSID").value,
+                      params2: document.getElementById("Wifi_CLIENT_Pwd").value};
+          }
+
+        break;
+      case 'whitelist_0':
+      case 'whitelist_1':
+      case 'whitelist_2':
+      case 'whitelist_3':
+      case 'whitelist_4':
+      case 'whitelist_5':
+      case 'whitelist_6':
+      case 'whitelist_7':
+      case 'whitelist_8':                                                         
+          var index = parseInt(value.substring(value.length - 1))
+          EncryptStr = caesarEncrypt( document.getElementById(value).value, 3);
+          params = {params1: EncryptStr,
+                    params2: index};
+        break;
+      
+      case 'mac_whitelist_0':
+      case 'mac_whitelist_1':
+      case 'mac_whitelist_2':
+      case 'mac_whitelist_3':
+      case 'mac_whitelist_4':
+      case 'mac_whitelist_5':
+      case 'mac_whitelist_6':
+      case 'mac_whitelist_7':
+      case 'mac_whitelist_8':
+          let uint64Value = BigInt(0);
+          input_value = document.getElementById(value)
+
+          uint64Value = ValidateMACaddress(input_value);
+          //console.log(uint64Value)
+          index_value = input_value.id.substring(input_value.id.length-1)
+          //console.log(index_value)
+
+          if (uint64Value != false)
+          {
+            params = {params1: uint64Value,
+                    params2: index_value};
+          }
+        break;
+      //Page OCPP Setting
+      case 'BOXID':
+          params = {params1: value,
+                    params2: In_para1};
+        break;
+      case 'OCPP_URL':
+          params = {params1: document.getElementById("OCPP_URL").value};
+        break;
+      //Page Maintenances
+      default:
+            console.log("Input value:" + value + " out of range in function CGI_Send.");
+      break;
+    }
+
+    if(params && Object.keys(params).length > 0){
+      for (var key in params) {
+            if (params.hasOwnProperty(key)) {
+                var input = document.createElement("input");
+                input.type = "hidden";
+                input.name = key;
+                input.value = params[key];
+                form.appendChild(input);
+            }
+        }
+    }
+    document.body.appendChild(form);
+    form.submit();
+  }
+
+  function checkRFID(input){
+    var inputStr = input.value;
+    input.value = inputStr.toUpperCase();
+    var pattern = /^[0-9A-F]+$/;
+    
+    if (!pattern.test(inputStr)){
+      // if invalid，input value set as valid part
+      input.value = inputStr.replace(/[^0-9A-F]/g, '');
+    }
+  }
+
+  function checkRatingCurrent(input)
+  {
+    var value = parseFloat(input.value);
+
+    if (isNaN(value)) 
+    {
+        input.value = 0; // default value
+    } else 
+    {
+        // limited range for value
+        if (value > 48) 
+        {
+          input.value = 48;
+        } 
+        else if (value < 0) 
+        {
+          input.value = 0;
+        } 
+        else 
+        {
+          input.value = value;
+        }
+    }
+  }
+
+  function checkBOXID_LEN(input){
+    var value = input.value;
+    var regex = /^[a-zA-Z0-9_-]*$/; // Regular expression, check string a~z,A~Z,0~9 ,char "-" and"_"
+
+    if(!regex.test(value))
+    {input.value = value.replace(/[^a-zA-Z0-9_-]/g, '');} // Del char when over regex expression}
+
+    if(value == null) 
+    {input.value = 1;}
+
+    if (value.length > 10)
+    {input.value = value.slice( 0, 10);}
+  }
+
+  function showConfirmation(action){
+
+    if(action == 'sw_reset')
+    {
+      CGI_Send(action);
+      setTimeout(function() {
+      window.close();
+      }, 2000);
+    }
+    else if(action == 'close_table')
+    {
+      setTimeout(function() {
+      window.close();
+      }, 2000);
+    }
+    else if(action == 'reset2default')
+    {
+      if (confirm('Confirm to reset charger setting to default.')) 
+      {
+        CGI_Send(action);
+        setTimeout(function() {
+        //window.open("about:blank", "_self").close();
+        window.close();
+        }, 2000);
+      }
+    }
+    else if(action == 'reset2factory')
+    {
+      var password_str  = prompt('It will delete all event and log data. Please enter user password if you want to continue:');
+      var User_password = document.getElementById("Login_Password");
+
+      if (password_str === User_password.value) 
+      {
+        CGI_Send(action);
+        setTimeout(function() {
+        //window.open("about:blank", "_self").close();
+        window.close();
+        }, 2000);
+      } 
+      else 
+      {
+        alert('Incorrect password.Please try again.');
+      }
+    }
+    else
+    {
+      console.log("Input value:" + action + "out of range in function showConfirmation.");
+    }
+  }
+
+  function update_InputDiabled_mac_addr(){
+    var chargAuthSelect= document.querySelector('[name="Access_Mode"]');
+    var whitelistInputs = document.querySelectorAll('[id^="mac_whitelist_"]');
+    var whitelistButs   = document.querySelectorAll('[id^="but_mac_whitelist_"]');
+    //var macAddressTable = document.getElementById('mac_list');
+    //macAddressTable.style.display = (chargAuthSelect.value != "1") ? "none" : "table-row";
+
+    whitelistInputs.forEach(function(input) {
+    input.disabled = (chargAuthSelect.value != "1");
+    });
+
+    whitelistButs.forEach(function(button) {
+    button.disabled = (chargAuthSelect.value != "1");
+    });
+  }
+
+
+  function update_InputDiabled(){
+  var URLInput       = document.getElementById("OCPP_URL");
+  var chargAuthSelect= document.querySelector('[name="Charg_Auth"]');
+  var wifiDHCPSelect = document.querySelector('[name="Wifi_DHCP"]');
+  var ethDHCPSelect  = document.querySelector('[name="Eth_DHCP"]');
+  var macAddressTable = document.getElementById('Local_list');
+
+
+  //Local list mode enable/disable
+  macAddressTable.style.display = (chargAuthSelect.value != "1") ? "none" : "table-row";
+
+  //OCPP mode enable/disable
+  URLInput.disabled = (chargAuthSelect.value != "2");
+
+  //eth Static IC/DHCP
+  var ethVal ;
+  if(ethDHCPSelect.value == "0")
+  {ethVal = false;}
+  else
+  {ethVal = true;}
+
+  document.getElementById("IP_addr_eth").disabled     = ethVal;
+  document.getElementById("but_IP_addr_eth").disabled = ethVal;
+  document.getElementById("Submask_eth").disabled     = ethVal;
+  document.getElementById("but_Submask_eth").disabled = ethVal;
+
+  //WIFI Static IC/DHCP
+  var wifiVal ;
+  if(wifiDHCPSelect.value == "0")
+  {wifiVal = false;}
+  else
+  {wifiVal = true;}
+
+  document.getElementById("IP_addr_wifi").disabled    = wifiVal;
+  document.getElementById("but_IP_addr_wifi").disabled= wifiVal;
+  document.getElementById("Submask_wifi").disabled    = wifiVal;
+  document.getElementById("but_Submask_wifi").disabled= wifiVal;
+  }
+
+  function ShowPwd(){
+    var x = document.getElementById("Login_Password");
+    if (x.type === "password") 
+    {x.type = "text";} 
+    else 
+    {x.type = "password";}
+  }
+
+  function checkPasswordNotEmpty() {
+        var password = document.getElementById('Login_Password').value;
+        if (password.trim() === '') {
+            alert('Password shall not empty.');
+            return false;
+        }
+        return true;
+    }
+
+
+  function showPage(pageId) {
+    //show page
+    const pages = document.getElementsByClassName('page');
+    for (let i = 0; i < pages.length; i++) {
+      pages[i].style.display = 'none';
+    }
+    //hide page
+    const targetPage = document.getElementById(pageId);
+    targetPage.style.display = 'block';
+  }
+
+  function checkLength(textarea) {
+    if (textarea.value.length > textarea.getAttribute('maxlength')) {
+      textarea.style.overflowY = 'auto';
+    } else {
+      textarea.style.overflowY = 'hidden';
+    }
+  }
+
+  function ValidateIPaddress(entry_comp) 
+  {
+    // Using Regex expression for validating IPv4
+    var ipaddress =
+            /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$/;
+
+    if (ipaddress.test(entry_comp.value))
+    {
+      let uint32Value = 0;
+      const ipSegments = entry_comp.value.split('.');
+      for (let i = 0; i < 4; i++) 
+      {
+        const segment = parseInt(ipSegments[i], 10);
+        uint32Value = (uint32Value << 8) | (segment & 0xFF);
+      }
+      uint32Value = uint32Value >>> 0; // 轉換為無符號32位整數
+
+      CGI_Send(entry_comp.id, uint32Value);
+      return (true)
+    }
+    alert("You have entered an invalid IP address!")
+    return (false)
+  }
+
+  function ValidateMACaddress(entry_comp) 
+  {
+    // Using Regex expression for validating IPv4
+    var ipaddress =
+        /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;
+
+    if (ipaddress.test(entry_comp.value))
+    {
+      let uint64Value = BigInt(0);
+      const macSegments = entry_comp.value.split('-');
+      for (let i = 0; i < 6; i++) 
+      {
+        const segment = parseInt(macSegments[i], 16);
+        uint64Value = (uint64Value << BigInt(8)) | BigInt(segment);
+      }
+      //uint64Value = uint64Value >>> 0; // 轉換為無符號32位整數
+      //console.log(entry_comp.id.substring(entry_comp.id.length-1))
+      //console.log(uint64Value)
+      //CGI_Send(entry_comp.id.substring(entry_comp.id.length-1), uint64Value);
+      return (uint64Value)
+    }
+    alert("You have entered an invalid MAC address!")
+    return (false)
+  }
+
+
+  function caesarEncrypt(plaintext, shift) 
+  {
+    let result = "";
+    for (let i = 0; i < plaintext.length; i++) {
+        let charCode = plaintext.charCodeAt(i);
+        if ((charCode >= 65 && charCode <= 90) || (charCode >= 97 && charCode <= 122)) { // letters
+            let base = charCode >= 65 && charCode <= 90 ? 65 : 97;
+            result += String.fromCharCode(((charCode - base + shift) % 26 + 26) % 26 + base);
+        } else if (charCode >= 48 && charCode <= 57) { // numbers
+            result += String.fromCharCode(((charCode - 48 + shift) % 10 + 10) % 10 + 48);
+        } else { // other characters
+            result += plaintext[i];
+        }
+    }
+    return result;
+  }
+
+  function caesarDecrypt(ciphertext, shift) 
+  {
+    let result = "";
+    for (let i = 0; i < ciphertext.length; i++) {
+        let charCode = ciphertext.charCodeAt(i);
+        if ((charCode >= 65 && charCode <= 90) || (charCode >= 97 && charCode <= 122)) { // letters
+            let base = charCode >= 65 && charCode <= 90 ? 65 : 97;
+            result += String.fromCharCode(((charCode - base - shift + 26) % 26 + 26) % 26 + base);
+        } else if (charCode >= 48 && charCode <= 57) { // numbers
+            result += String.fromCharCode(((charCode - 48 - shift + 10) % 10 + 10) % 10 + 48);
+        } else { // other characters
+            result += ciphertext[i];
+        }
+    }
+    return result;
+  }
+
+
+  function preventSubmit(event) 
+  {
+    if (event.key === "Enter") {
+      event.preventDefault();
+    }
+  }
+  </script>
+
+
+</body></html>
