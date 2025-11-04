@@ -5,6 +5,9 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import ElementClickInterceptedException
+from selenium.common.exceptions import StaleElementReferenceException
+from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import WebDriverException
 from datetime import datetime
 from tkinter import messagebox
 from pathlib import Path
@@ -27,14 +30,12 @@ FIRMWARE_IMAGES = {
     IMAGE_A_MPU_VERSION: r"D:\Foxconn\EVSE\Binoki\Image_OTA\20251017_BNK_DVT_MPU_v2.11.3\imx8mpevk-fox.zip",
     IMAGE_B_MPU_VERSION: r"D:\Foxconn\EVSE\Binoki\Image_OTA\20250930_BNK_DVT_MPU_V2.11.1\imx8mpevk-fox.zip",
 }
-# loginpwd = "8QOJ19Q3"
 TIMEOUT_SEC = 10
-ERR_RETRY_OPENPAGE = 3
+ERR_RETRY_OPENPAGE = 5
 ERR_RETRY_LOGIN = 3
 TIME_GAP_SECONDS_REBOOT = 60
 TIME_GAP_SECONDS_RESET_DEFAULT = 20
 TIME_GAP_SECONDS_RESET_FORMAT = 160
-TIME_GAP_SECONDS_FW_UPDATE = 120
 
 class BNK_TEST_COMMAND(enum.IntEnum):
     REBOOT = 1
@@ -275,15 +276,74 @@ class WebAutomation:
         update_btn = wait.until(EC.element_to_be_clickable(update_btn_locator))
         self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", update_btn)
         update_btn.click()
+    
+    def wait_fwupdate_progress_complete(self, timeout: int = 120):
+        progress_locator = (By.ID, "firmwareProgressBar")
+        wait = WebDriverWait(self.driver, timeout)
 
+        wait.until(EC.presence_of_element_located(progress_locator))
 
+        def progress_reached(driver):
+            try:
+                element = driver.find_element(*progress_locator)
+            except StaleElementReferenceException:
+                return False
+
+            value_now = element.get_attribute("aria-valuenow")
+            if value_now and value_now.isdigit():
+                return int(value_now) >= 100
+
+            text_content = element.text.strip()
+            if text_content.endswith("%"):
+                try:
+                    return int(text_content.rstrip("%")) >= 100
+                except ValueError:
+                    pass
+
+            style_attr = element.get_attribute("style") or ""
+            if "width" in style_attr:
+                try:
+                    width_value = float(style_attr.split("width:")[1].split("%")[0].strip())
+                    return width_value >= 100
+                except (IndexError, ValueError):
+                    return False
+
+            return False
+
+        wait.until(progress_reached)
+
+    def wait_connection_interrupted(self, timeout: int = 240):
+        locators = [
+            (By.XPATH, "//span[normalize-space()='Your connection was interrupted']"),
+            (By.XPATH, "//span[contains(normalize-space(), 'This site can') and contains(normalize-space(), 'be reached')]"),
+        ]
+        wait = WebDriverWait(self.driver, timeout)
+
+        def message_visible(driver):
+            for locator in locators:
+                try:
+                    element = driver.find_element(*locator)
+                    if element.is_displayed():
+                        return element
+                except (NoSuchElementException, StaleElementReferenceException):
+                    continue
+            return False
+
+        try:
+            element = wait.until(message_visible)
+            return element.text.strip() if element else ""
+        except TimeoutException:
+            return ""
+    
     def run_command(self, cmd):
         self.navigate_to_system_tools()
         match cmd:
             case BNK_TEST_COMMAND.FW_UPDATE:
                 self.check_last_fwupdate()
                 self.click_but_fwupdate()
-                self.sys.sleep_time_second_set(TIME_GAP_SECONDS_FW_UPDATE)
+                self.wait_fwupdate_progress_complete()
+                self.wait_connection_interrupted()
+                self.sys.sleep_time_second_set(TIME_GAP_SECONDS_REBOOT)
             case BNK_TEST_COMMAND.REBOOT:
                 self.click_reboot_but()
                 print("Reboot action done, wait for ", TIME_GAP_SECONDS_REBOOT, " seconds")
@@ -303,21 +363,41 @@ class ScriptAction:
     def __init__(self, SystemInfo_instance):
         self.signal_flag = threading.Event()# Shared flag for signaling
         self.sys = SystemInfo_instance
+        self.skip_sleep_event = threading.Event()
+        self.sleep_in_progress = threading.Event()
     def open_page_retry(self):
-        if(self.automation.open_page(BASE_URL) != ERROR_ENUM.ERR_NONE):
+        while True:
+            try:
+                result = self.automation.open_page(BASE_URL)
+            except WebDriverException as exc:
+                print(f"WebDriverException while opening page: {exc}")
+                result = ERROR_ENUM.ERR_OPEN_PAGE
+
+            if result == ERROR_ENUM.ERR_NONE:
+                return ERROR_ENUM.ERR_NONE
+
             self.sys.err_time_open_page_add()
-            if(self.sys.err_time_open_page_get() > ERR_RETRY_OPENPAGE):
+            print(f"Open page failed, retry count: {self.sys.err_time_open_page_get()}")
+            if self.sys.err_time_open_page_get() > ERR_RETRY_OPENPAGE:
                 return ERROR_ENUM.ERR_RETRY_OUT
-            else:
-                self.open_page_retry()
+
+            try:
+                self.automation.close()
+            except Exception:
+                pass
+
+            time.sleep(1)
+            self.automation = WebAutomation(BASE_URL, USERNAME, PASSWORD, self.sys)
     def login_retry(self):
-        if(self.automation.login() != ERROR_ENUM.ERR_NONE):
+        if self.automation.login() != ERROR_ENUM.ERR_NONE:
             self.sys.err_time_login_add()
-            if(self.sys.err_time_login_get() > ERR_RETRY_LOGIN):
+            if self.sys.err_time_login_get() > ERR_RETRY_LOGIN:
                 return ERROR_ENUM.ERR_RETRY_OUT
             else:
                 self.automation.refresh_page()
-                self.login_retry
+                return self.login_retry()
+        return ERROR_ENUM.ERR_NONE
+
     def fail_stop(self):
         self.sys.timestamp_end_set()
         self.automation.close()
@@ -341,7 +421,17 @@ class ScriptAction:
                     self.automation.close()
                     break
                 self.sys.timestamp_before_sleep_set()
-                time.sleep(self.sys.sleep_time_second_get())
+                sleep_seconds = self.sys.sleep_time_second_get()
+                if sleep_seconds > 0:
+                    self.skip_sleep_event.clear()
+                    self.sleep_in_progress.set()
+                    interrupted = self.skip_sleep_event.wait(timeout=sleep_seconds)
+                    self.sleep_in_progress.clear()
+                    self.skip_sleep_event.clear()
+                    if interrupted:
+                        print("Sleep skipped by user request")
+                        self.sys.sleep_time_second_set(0)
+                self.skip_sleep_event.clear()
                 self.automation.close()
         except Exception as err: 
             print(f"ScriptAction Unexpected {err=}, {type(err)=}")
@@ -349,6 +439,12 @@ class ScriptAction:
         finally:
             print("ScriptAction done")
             # continue
+    def skip_sleep(self):
+        if self.sleep_in_progress.is_set():
+            self.sys.sleep_time_second_set(0)
+            self.skip_sleep_event.set()
+            return True
+        return False
     def test_thread(self):
         print("Monitor thread started. Waiting for the signal...")
         while True:
@@ -386,6 +482,8 @@ class GUI_panel:
         self.button_infinite.pack(side=tk.LEFT, padx=5)
         self.button_finite = tk.Button(frame_1, text="Finite Loop", command=self.btn_finite)
         self.button_finite.pack(side=tk.LEFT,pady=5)
+        self.button_skipsleep = tk.Button(frame_1, text="Skip Sleep", command=self.btn_skipsleep)
+        self.button_skipsleep.pack(side=tk.LEFT,pady=5)
         frame_1.pack()
 
         self.status_label = tk.Label(frame_2, text="Action taken: None")
@@ -430,6 +528,11 @@ class GUI_panel:
         num_iterations = tkinter.simpledialog.askinteger("Finite Loop", "Enter the number of iterations:")
         if num_iterations > 0:
             self.sys.max_test_time_set(num_iterations)
+    def btn_skipsleep(self):
+        if self.scrt.skip_sleep():
+            self.update_instruction_label("Sleep skipped. Resuming tests...")
+        else:
+            messagebox.showinfo("Skip Sleep", "No sleep in progress to skip.")
     def update_task(self):
         target_time = self.sys.max_test_time_get() if self.sys.max_test_time_get() else "infinite"
         self.status_label.config(justify="left", text=f"Action: {self.sys.test_command_string_get()}, \nStartTime: {self.sys.starttime }\nTarget Time: {target_time}, \nRunning Times: {self.sys.now_test_time_get()}")
