@@ -10,6 +10,7 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import WebDriverException
 from datetime import datetime
 from tkinter import messagebox
+from tkinter import filedialog
 from pathlib import Path
 
 import tkinter as tk
@@ -25,7 +26,7 @@ PASSWORD = "AM0ANMMB"
 IMAGE_A_MPU_VERSION = "02.11.03"
 IMAGE_A_MCU_VERSION = "00.00.01"
 IMAGE_B_MPU_VERSION = "02.11.01"
-IMAGE_B_MCU_VERSION = "80.00.01"
+IMAGE_B_MCU_VERSION = "00.00.01"
 FIRMWARE_IMAGES = {
     IMAGE_A_MPU_VERSION: r"D:\Foxconn\EVSE\Binoki\Image_OTA\20251017_BNK_DVT_MPU_v2.11.3\imx8mpevk-fox.zip",
     IMAGE_B_MPU_VERSION: r"D:\Foxconn\EVSE\Binoki\Image_OTA\20250930_BNK_DVT_MPU_V2.11.1\imx8mpevk-fox.zip",
@@ -33,7 +34,7 @@ FIRMWARE_IMAGES = {
 TIMEOUT_SEC = 10
 ERR_RETRY_OPENPAGE = 5
 ERR_RETRY_LOGIN = 3
-TIME_GAP_SECONDS_REBOOT = 60
+TIME_GAP_SECONDS_REBOOT = 45
 TIME_GAP_SECONDS_RESET_DEFAULT = 20
 TIME_GAP_SECONDS_RESET_FORMAT = 160
 
@@ -121,7 +122,7 @@ class SystemInfo:
         self.new_mpu_version = mpu_version
         self.new_mcu_version = mcu_version
     def check_info_get(self):
-        return self.new_mpu_version
+        return self.new_mpu_version, self.new_mcu_version
 class WebAutomation:
     def __init__(self, base_url, username, password, SystemInfo_instance):
         self.sys = SystemInfo_instance
@@ -249,15 +250,21 @@ class WebAutomation:
         self.alert_reset_format()
     def check_last_fwupdate(self):
         if self.sys.now_test_time_get() == 0:
-            print("Skip version check due to first test, Now MPU version:", self.now_mpu_version)
+            print("Skip version check due to first test, Now MPU version:", self.now_mpu_version, "MCU Version:", self.now_mcu_version)
             return
         else:
-            target_version = self.sys.check_info_get()
-            if self.now_mpu_version == target_version:
-                print("Check: FW Update OK, Now MPU version:", self.now_mpu_version)
-            elif self.now_mpu_version != target_version:
-                messagebox.showerror("Error", "FW update version mismatch!\nExpected MPU version: " + target_version + "\nCurrent MPU version: " + self.now_mpu_version)
-                raise Exception("Check: FW update failed or unknown MPU version!")
+            target_mpu, target_mcu = self.sys.check_info_get()
+            errors = []
+            if self.now_mpu_version != target_mpu:
+                errors.append(f"MPU version mismatch!\nExpected: {target_mpu}\nCurrent: {self.now_mpu_version}")
+            if self.now_mcu_version != target_mcu:
+                errors.append(f"MCU version mismatch!\nExpected: {target_mcu}\nCurrent: {self.now_mcu_version}")
+
+            if errors:
+                messagebox.showerror("Error", "FW update version mismatch!\n" + "\n".join(errors))
+                raise Exception("Check: FW update failed or unknown version!")
+            else:
+                print("Check: FW Update OK, MPU version:", self.now_mpu_version, "MCU version:", self.now_mcu_version)
     def click_but_fwupdate(self):
         next_version = IMAGE_B_MPU_VERSION if self.now_mpu_version == IMAGE_A_MPU_VERSION else IMAGE_A_MPU_VERSION
         self.sys.check_info_set(next_version, IMAGE_A_MCU_VERSION if next_version == IMAGE_A_MPU_VERSION else IMAGE_B_MCU_VERSION)
@@ -508,7 +515,68 @@ class GUI_panel:
     def button_action(self):
         self.scrt.signal_flag.set()
         self.button_lock()
+    def prompt_fwupdate_settings(self):
+        global IMAGE_A_MPU_VERSION, IMAGE_A_MCU_VERSION, IMAGE_B_MPU_VERSION, IMAGE_B_MCU_VERSION, FIRMWARE_IMAGES
+
+        def ask_version(prompt, initial):
+            value = tkinter.simpledialog.askstring("Firmware Version", prompt, initialvalue=initial)
+            if value is None:
+                return None
+            value = value.strip()
+            return value if value else None
+
+        def ask_zip_path(title, current_path):
+            initial_dir = ""
+            if current_path:
+                try:
+                    initial_dir = str(Path(current_path).parent)
+                except Exception:
+                    initial_dir = ""
+            file_path = filedialog.askopenfilename(
+                title=title,
+                filetypes=[("ZIP files", "*.zip"), ("All files", "*.*")],
+                initialdir=initial_dir if initial_dir else None
+            )
+            return file_path if file_path else None
+
+        current_a_path = FIRMWARE_IMAGES.get(IMAGE_A_MPU_VERSION, "")
+        current_b_path = FIRMWARE_IMAGES.get(IMAGE_B_MPU_VERSION, "")
+
+        new_a_mpu = ask_version("Enter IMAGE_A_MPU_VERSION", IMAGE_A_MPU_VERSION)
+        if not new_a_mpu:
+            return False
+        new_a_mcu = ask_version("Enter IMAGE_A_MCU_VERSION", IMAGE_A_MCU_VERSION)
+        if not new_a_mcu:
+            return False
+        a_zip = ask_zip_path("Select firmware zip for IMAGE_A", current_a_path)
+        if not a_zip:
+            messagebox.showinfo("FW update", "Firmware selection cancelled.")
+            return False
+
+        new_b_mpu = ask_version("Enter IMAGE_B_MPU_VERSION", IMAGE_B_MPU_VERSION)
+        if not new_b_mpu:
+            return False
+        new_b_mcu = ask_version("Enter IMAGE_B_MCU_VERSION", IMAGE_B_MCU_VERSION)
+        if not new_b_mcu:
+            return False
+        b_zip = ask_zip_path("Select firmware zip for IMAGE_B", current_b_path)
+        if not b_zip:
+            messagebox.showinfo("FW update", "Firmware selection cancelled.")
+            return False
+
+        IMAGE_A_MPU_VERSION = new_a_mpu
+        IMAGE_A_MCU_VERSION = new_a_mcu
+        IMAGE_B_MPU_VERSION = new_b_mpu
+        IMAGE_B_MCU_VERSION = new_b_mcu
+        FIRMWARE_IMAGES = {
+            IMAGE_A_MPU_VERSION: a_zip,
+            IMAGE_B_MPU_VERSION: b_zip,
+        }
+        self.update_instruction_label("Firmware configuration updated.")
+        return True
     def btn_fwupdate(self):
+        if not self.prompt_fwupdate_settings():
+            return
         self.sys.test_command_set(BNK_TEST_COMMAND.FW_UPDATE)
         self.button_action()
     def btn_reboot(self):
